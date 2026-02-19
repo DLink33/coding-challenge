@@ -23,7 +23,7 @@ buildNumber.properties
 Thumbs.db
 
 # --- SQLite DB files (persisted locally) ---
-notes-vault/data/*.db
-notes-vault/data/*.db-journal
-notes-vault/data/*.db-wal
-notes-vault/data/*.db-shm
+notesvault/data/*.db
+notesvault/data/*.db-journal
+notesvault/data/*.db-wal
+notesvault/data/*.db-shm
