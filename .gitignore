@@ -1,4 +1,5 @@
-target/
+# --- Maven / Java ---
+**/target/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -7,11 +8,22 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
-# https://maven.apache.org/wrapper/#usage-without-binary-jar
-.mvn/wrapper/maven-wrapper.jar
 
-# Eclipse m2e generated files
-# Eclipse Core
+# --- IDE ---
+.vscode/
+.idea/
+*.iml
+
+# --- Eclipse (if ever used) ---
 .project
-# JDT-specific (Eclipse Java Development Tools)
 .classpath
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+
+# --- SQLite DB files (persisted locally) ---
+notes-vault/data/*.db
+notes-vault/data/*.db-journal
+notes-vault/data/*.db-wal
+notes-vault/data/*.db-shm
