@@ -199,3 +199,219 @@ Ready to begin implementation of core domain model (`Note`) and API endpoints.
   - getters and setters
 
 - Research and setup MVC with Springboot for a single endpoint
+
+### Completed
+
+#### 1. Added NoteEntity
+- Created NoteEntity class with decorators for a JPA entity
+
+#### 2. Added NoteRepository Interface
+- To simplify CRUD operations with database
+- SQL not required for database queries and writes
+
+
+### Observations
+- NoteEntity must be formatted with JPA annotations to allow for proper interfacing with the database
+- Since I am using a new major version (4.x.x) for springboot in the pom file, some imports and references have changed since 3.x.x
+
+### Status and Next Steps
+
+Project still buildable and stable. 
+Will write test for database next
+
+
+## Session 3 - Repository Test & Validation of Persistence Layer
+
+### Objectives
+- Implement a data-layer test for `NoteRepository`
+- Confirm correct mapping of:
+  - UUID primary key
+  - `created_at` timestamp
+  - trimmed content behavior
+
+
+---
+
+### Completed
+
+#### 1. Implemented `@DataJpaTest` for NoteRepository
+- Created `NoteRepositoryTest`
+- Used `@DataJpaTest` to load only the JPA slice of the application
+- Activated `test` profile via `@ActiveProfiles("test")`
+- Disabled automatic test database replacement to ensure SQLite is used:
+
+  @AutoConfigureTestDatabase(replace = Replace.NONE)
+
+This ensures the test runs against the same database technology (SQLite + Hibernate dialect) that the application will use in production.
+
+---
+
+#### 2. Configured Test-Specific Properties
+- Added `src/test/resources/application-test.properties`
+- Configured separate test database file (`notes-test.db`)
+- Set:
+  - `ddl-auto=create-drop` (clean schema per test run)
+  - SQLite JDBC URL
+  - Hibernate community SQLite dialect
+
+This isolates test data from development data while still validating real persistence behavior.
+
+---
+
+#### 3. Verified Repository Round-Trip Behavior
+
+The test confirms:
+
+- A `NoteEntity` can be saved successfully
+- UUID is generated
+- `createdAt` timestamp is populated
+- `content` is trimmed correctly
+- Entity can be retrieved via `findById`
+
+This validates:
+
+- Entity-to-table mapping
+- Dialect configuration
+- Repository wiring
+- Test profile configuration
+
+---
+
+### Observations
+
+- Spring Boot 4.x reorganized test-related imports and requires technology-specific test starters (e.g., `spring-boot-starter-data-jpa-test`).
+- `@DataJpaTest` attempts to replace the datasource by default; explicit configuration is required to test against SQLite.
+- Testing against SQLite rather than an in-memory database reduces risk of dialect-related issues.
+
+---
+
+### Status
+
+Data layer is now verified and stable.
+
+The following are confirmed working:
+
+- Hibernate + SQLite dialect
+- JPA entity mapping
+- Spring Data repository integration
+- Isolated test profile
+
+---
+
+### Next Steps
+
+- Implement first REST endpoint (`POST /notes`)
+- Add API-level test using `MockMvc`
+- Validate:
+  - 201 response on success
+  - 400 response for blank content
+  - Proper JSON structure in response body
+
+
+## Session 4 - POST /notes Endpoint & API-Level Testing
+
+### Objectives
+- Implement `POST /notes`
+- Introduce API-level test using `MockMvc`
+- Return proper `201 Created` response
+- Validate `400 Bad Request` for blank content
+- Resolve Spring Boot 4 test configuration changes
+
+---
+
+### Completed
+
+#### 1. Resolved Spring Boot 4 Test Configuration Changes
+- `@AutoConfigureMockMvc` package moved in Boot 4.x
+- Updated import to:
+
+  org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+
+- Added `spring-boot-starter-webmvc-test` (test scope)
+
+This restored proper `MockMvc` support under Boot 4.x.
+
+---
+
+#### 2. Implemented API-Level Test (`NoteControllerTest`)
+- Used `@SpringBootTest`
+- Used `@AutoConfigureMockMvc`
+- Injected `MockMvc`
+- Wrote tests to validate:
+
+  - `201 Created` on valid request
+  - `Location` header is set
+  - JSON response contains:
+    - `id`
+    - `content`
+    - `createdAt`
+  - `400 Bad Request` when content is blank
+
+Initial test failure returned `404`, confirming endpoint did not yet exist.
+
+---
+
+#### 3. Implemented Minimal `POST /notes` Controller
+
+Created:
+
+- `CreateNoteRequest` (request DTO with `@NotBlank`)
+- `NoteResponse` (response DTO)
+- `NoteController`
+
+Controller behavior:
+
+- `@RequestBody` binds JSON → DTO
+- `@Valid` triggers Bean Validation
+- `ResponseEntity.created(...).body(...)` returns:
+  - HTTP 201
+  - `Location` header
+  - JSON response
+
+Temporary UUID + `Instant.now()` used as stub persistence (to be replaced by service/repository layer).
+
+---
+
+#### 4. Verified Request Lifecycle Behavior
+
+Observed during test execution:
+
+- Blank content triggers `MethodArgumentNotValidException`
+- Spring returns `400 Bad Request`
+- Controller method body does not execute on validation failure
+- Successful requests return `201` and expected JSON structure
+
+This confirms:
+
+- Jackson JSON binding is working
+- Validation pipeline is functioning
+- Proper HTTP semantics are enforced
+
+---
+
+### Observations
+
+- Spring Boot 4.x modularized test auto-configuration and moved `MockMvc`-related annotations.
+- Validation occurs before controller logic executes.
+- `@RestController` automatically serializes return values via Jackson.
+- `ResponseEntity.created()` properly sets `201 Created` and `Location` header.
+
+---
+
+### Status
+
+API layer now supports:
+
+- `POST /notes`
+- Proper 201 response semantics
+- Validation-driven 400 behavior
+- API-level integration testing via `MockMvc`
+
+---
+
+### Next Steps
+
+- Replace stub UUID/timestamp with real service + repository persistence
+- Decide on structured error body (`@RestControllerAdvice`) vs status-only 400
+- Implement `GET /notes`
+- Implement `GET /notes/{id}`
