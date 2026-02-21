@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -13,9 +14,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 class NoteControllerTest {
 
   @Autowired MockMvc mockMvc;
+  @Autowired NoteRepository noteRepository;
 
   @Test
   void createNote_returns201_andBody_andLocation() throws Exception {
@@ -47,7 +50,9 @@ class NoteControllerTest {
     mockMvc.perform(post("/notes")
         .contentType(MediaType.APPLICATION_JSON)
         .content(json))
+      // Verify that the response status is 400 Bad Request due to validation failure
       .andExpect(status().isBadRequest())
+      // Verify that the error message contains "content" to indicate which field failed validation
       .andExpect(jsonPath("$.error").value(Matchers.containsString("content")));
   }
 }

@@ -144,8 +144,6 @@ IDE will be VS Code connected to WSL
 
 ---
 
-### Completed
-
 #### 1. Project Initialization
 - Generated Spring Boot Maven project using Java 21 (LTS).
 - Selected minimal dependencies:
@@ -200,8 +198,6 @@ Ready to begin implementation of core domain model (`Note`) and API endpoints.
 
 - Research and setup MVC with Springboot for a single endpoint
 
-### Completed
-
 #### 1. Added NoteEntity
 - Created NoteEntity class with decorators for a JPA entity
 
@@ -231,8 +227,6 @@ Will write test for database next
 
 
 ---
-
-### Completed
 
 #### 1. Implemented `@DataJpaTest` for NoteRepository
 - Created `NoteRepositoryTest`
@@ -315,11 +309,8 @@ The following are confirmed working:
 - Introduce API-level test using `MockMvc`
 - Return proper `201 Created` response
 - Validate `400 Bad Request` for blank content
-- Resolve Spring Boot 4 test configuration changes
 
 ---
-
-### Completed
 
 #### 1. Resolved Spring Boot 4 Test Configuration Changes
 - `@AutoConfigureMockMvc` package moved in Boot 4.x
@@ -415,3 +406,107 @@ API layer now supports:
 - Decide on structured error body (`@RestControllerAdvice`) vs status-only 400
 - Implement `GET /notes`
 - Implement `GET /notes/{id}`
+
+
+## Session 5 - Introduce Service Layer & Refactor Creation Logic
+
+### Objectives
+- Introduce `NoteService` between `NoteController` and `NoteRepository`
+- Separate HTTP, business, and persistence responsibilities
+- Remove stub persistence from controller
+- Move normalization and creation logic out of `NoteEntity`
+- Add focused unit test for `NoteService`
+
+---
+
+### Completed
+
+#### 1. Created `NoteService`
+- Added `NoteService` annotated with `@Service`
+- Injected `NoteRepository` via constructor injection
+- Moved note creation responsibilities into service:
+  - Trim incoming content
+  - Guard against blank/null content (defensive validation)
+  - Generate UUID
+  - Set `createdAt` timestamp
+  - Persist via `noteRepository.save(...)`
+- Returned persisted `NoteEntity` to controller
+
+This establishes a clear separation of concerns:
+
+- **Controller** → HTTP semantics (status codes, headers, DTO mapping)
+- **Service** → Business logic and entity conditioning
+- **Repository** → Persistence
+- **Entity** → Pure JPA-mapped data model
+
+---
+
+#### 2. Refactored `NoteController`
+- Removed stub UUID/timestamp generation
+- Delegated creation to `NoteService`
+- Mapped saved entity → `NoteResponse`
+- Preserved REST semantics:
+  - `201 Created`
+  - `Location` header
+  - Response body with `id`, `createdAt`, `content`
+
+Controller now acts strictly as an HTTP adapter.
+
+---
+
+#### 3. Refactored `NoteEntity`
+- Removed content-based constructor
+- Removed trimming logic from entity
+- Added setters for `id` and `createdAt`
+- Entity now functions strictly as a persistence model
+
+This prevents business rules from leaking into the persistence layer.
+
+---
+
+#### 4. Updated `NoteRepositoryTest`
+- Adjusted test to manually assign required fields (`id`, `createdAt`) before saving
+- Clarified that repository tests validate mapping behavior only
+- Removed reliance on entity-side creation logic
+
+---
+
+#### 5. Added `NoteServiceTest` (Unit Test with Mockito)
+- Used `@ExtendWith(MockitoExtension.class)`
+- Mocked `NoteRepository`
+- Verified:
+  - Content trimming occurs
+  - UUID and `createdAt` are assigned
+  - `noteRepository.save()` is called exactly once
+  - Blank/null input throws `IllegalArgumentException`
+  - Repository is not called when validation fails
+
+This test validates business logic independently from JPA or HTTP layers.
+
+---
+
+### Observations
+
+- Separating service logic clarified responsibility boundaries significantly.
+- Repository tests should validate persistence behavior only — not business rules.
+- Unit testing service logic with Mockito is much simpler and faster than using full Spring context.
+- Constructor injection + final fields enforce immutability and clearer wiring.
+- Refactor required manual ID assignment in repository tests due to removal of entity constructor.
+
+---
+
+### Status
+
+- Project builds successfully
+- All tests pass
+- Clear architectural separation established:
+  - Controller → Service → Repository
+
+---
+
+### Next Steps
+
+- Strengthen `NoteControllerTest` with persistence assertion
+- Implement `GET /notes/{id}`
+- Implement `GET /notes`
+- Decide on final error response shape for invalid requests

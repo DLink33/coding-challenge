@@ -9,6 +9,9 @@ import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
+import java.util.UUID;
+
 @DataJpaTest
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = Replace.NONE) // Use the real database configuration for testing
@@ -21,16 +24,24 @@ class NoteRepositoryTest {
 
   @Test // Test that saving a note and then retrieving it by ID works correctly
   void save_and_findById_roundTrip() {
-    NoteEntity note = new NoteEntity("  hello  ");
-    //.save() returns the saved entity, which includes any auto-generated fields (like id and createdAt)
+    NoteEntity note = new NoteEntity();
+    note.setContent("hello");
+    note.setId(UUID.randomUUID().toString());
+    note.setCreatedAt(Instant.now());
+    //.save() returns the saved entity
     NoteEntity saved = noteRepository.save(note);
 
-    assertThat(saved.getId()).isNotBlank();
+    String savedId = saved.getId();
+    String savedContent = saved.getContent();
+    Instant savedCreatedAt = saved.getCreatedAt();
+
+    assertThat(savedId).isNotBlank();
     assertThat(saved.getCreatedAt()).isNotNull();
     assertThat(saved.getContent()).isEqualTo("hello");
 
-    var loaded = noteRepository.findById(saved.getId());
+    var loaded = noteRepository.findById(savedId);
     assertThat(loaded).isPresent();
-    assertThat(loaded.get().getContent()).isEqualTo("hello");
+    assertThat(loaded.get().getContent()).isEqualTo(savedContent);
+    assertThat(loaded.get().getCreatedAt()).isEqualTo(savedCreatedAt);
   }
 }
