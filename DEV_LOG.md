@@ -1,9 +1,7 @@
 # Backend Software Engineer Coding Challenge
 ### Notes Vault API
 
----
-
-# LOG:
+## LOG:
 
 ## Session 0 - Init Planning
 
@@ -44,7 +42,7 @@ A shaded/uber jar is optional and likely unnecessary given the wrapper-based wor
 ---
 
 ### Containerization  
-The challenge encourages “single-command” execution; Docker is a reasonable option but not required. The Maven wrapper would suffice. 
+The challenge encourages “single-command” execution; Docker is a reasonable option but not required. The Maven wrapper would suffice.  I will leave Docker containerization as a stretch goal.
 
 Plan:  
 - Prefer a clean local run via `./mvnw spring-boot:run`.  
@@ -63,7 +61,7 @@ Spring Boot testing plan:
 - API test using **MockMvc** (validates status codes + response shape)  
 - Data-layer test using **@DataJpaTest** (or a small unit test on the service layer if it better represents business logic)  
 
-I’ll be pragmatice with TDD: focus on core behaviors and error cases without attempting exhaustive testing (100% code coverage etc.).  
+I’ll be pragmatic with TDD: focus on core behaviors and error cases without attempting exhaustive testing (100% code coverage etc.).  
 
 ---
 
@@ -72,12 +70,23 @@ PostgreSQL and SQLite are both valid options; PostgreSQL feels heavy for the sma
 
 - SQLite provides persistence across runs via a local `.db` file.  
 - No need for multiple containers or external services (no Docker compose).
+- Will need a Docker volume if containerized
 
 ---
 
 ### Version Control
 Will be using Git/GitHub.
-Docker/DockerHub if my container is up to snuff
+(Docker/DockerHub if my container is up to snuff)
+
+### Dev Environment / IDE
+Will be using RHEL9 distro on Windows Subsystem Linux
+IDE will be VS Code connected to WSL
+  - Extensions:
+    - Extension Pack for Java (Microsoft)
+    - Languages Support for Java (Red Hat)
+    - Maven for Java
+    - Project Manager for Java
+    - Spring Boot Extension Pack
 
 ---
 
@@ -87,7 +96,8 @@ Docker/DockerHub if my container is up to snuff
 - Java 21 (LTS), Spring Boot (REST), Maven (wrapper included)  
 
 **Persistence**  
-- SQLite file-based DB (persists between runs)  
+- SQLite file-based DB (persists between runs)
+  - Docker Volume if applicable
 
 **API**  
 - `POST /notes` - create note (returns created note with `id` + `created_at`)  
@@ -116,6 +126,7 @@ Docker/DockerHub if my container is up to snuff
 ---
 
 ## Stretch Goals (Only if MVP is solid)
+- Docker containerization 
 - Search/filter/sort notes  
 - Authentication  
 - Simple front-end for manual testing  
@@ -181,4 +192,10 @@ Ready to begin implementation of core domain model (`Note`) and API endpoints.
 
 ## Session 2 - Building Data Model (Note Class)
 ### Objectives
-- 
+- Add our Note class that will represent our user notes
+  - id
+  - content
+  - timestamp
+  - getters and setters
+
+- Research and setup MVC with Springboot for a single endpoint

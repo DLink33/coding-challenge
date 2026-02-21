@@ -1,0 +1,61 @@
+package com.bluestaq.challenge.notesvault.notes;
+
+import jakarta.persistence.Entity;
+
+import java.time.Instant;
+import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+
+
+// This class needs to be implemented as a JPA entity to represent a note in the database
+
+@Entity
+@Table(name = "notes")
+public class NoteEntity {
+
+  @Id
+  @Column(name = "id", nullable = false, updatable = false, length = 36) // UUIDs are typically 36 characters long
+  private String id;
+
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private Instant createdAt;
+
+  @NotBlank
+  @Column(name = "content", nullable = false, columnDefinition = "TEXT")
+  private String content;
+
+  protected NoteEntity() {
+    // Default constructor for JPA
+    // this is used by JPA to create instances of the entity 
+    // when retrieving data from the database. Notice it's no-args
+    // and protected access level
+  }
+
+  public NoteEntity(String content) {
+    this.id = UUID.randomUUID().toString(); // Generate a unique ID for the note
+    this.createdAt = Instant.now();
+    this.setContent(content);
+  }
+
+  //getters
+  public String getId() {
+    return id; 
+  }
+
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
+
+  public String getContent() {
+    return content;
+  }
+
+  //setters
+  public void setContent(String content) {
+    this.content = (content == null) ? null : content.trim();
+  }
+}
