@@ -26,19 +26,24 @@ class NoteControllerTest {
     mockMvc.perform(post("/notes")
         .contentType(MediaType.APPLICATION_JSON)
         .content(json))
+      // Verify 201 Created status  
       .andExpect(status().isCreated())
+      // Verify Location header is present and matches the expected pattern
       .andExpect(header().string("Location", Matchers.matchesPattern(".*/notes/.*")))
+      // Verify the body has an id
       .andExpect(jsonPath("$.id").isNotEmpty())
+      // Verify the content is correct
       .andExpect(jsonPath("$.content").value("hello world"))
+      // Verify createdAt timestamp is present
       .andExpect(jsonPath("$.createdAt").isNotEmpty());
   }
 
   @Test
   void createNote_blankContent_returns400() throws Exception {
+    // this will get trimmed to blank and should trigger the validation error
     String json = """
       { "content": "   " }
-    """;
-
+    """; 
     mockMvc.perform(post("/notes")
         .contentType(MediaType.APPLICATION_JSON)
         .content(json))

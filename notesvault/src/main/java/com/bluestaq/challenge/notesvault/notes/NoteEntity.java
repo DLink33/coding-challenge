@@ -3,7 +3,6 @@ package com.bluestaq.challenge.notesvault.notes;
 import jakarta.persistence.Entity;
 
 import java.time.Instant;
-import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
@@ -35,12 +34,6 @@ public class NoteEntity {
     // and protected access level
   }
 
-  public NoteEntity(String content) {
-    this.id = UUID.randomUUID().toString(); // Generate a unique ID for the note
-    this.createdAt = Instant.now();
-    this.setContent(content);
-  }
-
   //getters
   public String getId() {
     return id; 
@@ -56,6 +49,15 @@ public class NoteEntity {
 
   //setters
   public void setContent(String content) {
-    this.content = (content == null) ? null : content.trim();
+    this.content = content;
   }
+
+  public void setCreatedAt(Instant createdAt) {
+    this.createdAt = createdAt;
+  }
+  
+  public void setId(String id) {
+    this.id = id;
+  }
+
 }
