@@ -1,6 +1,8 @@
 package com.bluestaq.challenge.notesvault.notes;
 
 import java.net.URI;
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -37,4 +39,34 @@ public class NoteController {
         .created(URI.create("/notes/" + savedNote.getId()))
         .body(body);
   }
+
+  // HTTP GET endpoint to retrieve a note by its ID.
+  // It returns a NoteResponse if the note is found, 
+  // or a 404 Not Found response if the note does not exist.
+  @GetMapping("/{id}")
+  public NoteResponse getById(@PathVariable String id) {
+    NoteEntity note = noteService.getNoteById(id);
+    return new NoteResponse(
+      note.getId(),
+      note.getCreatedAt(),
+      note.getContent()
+    );
+  }
+
+  // HTTP GET endpoint to list all notes.
+  // It returns a list of NoteResponse objects, ordered by creation time (newest first).
+  @GetMapping
+  public List<NoteResponse> listNotes() {
+    return noteService.listNotes().stream()
+      .map(note -> new NoteResponse(
+        note.getId(),
+        note.getCreatedAt(),
+        note.getContent()
+      ))
+      .toList();
+  }
+
+  //TODO: add update and delete endpoints
+  
+
 }

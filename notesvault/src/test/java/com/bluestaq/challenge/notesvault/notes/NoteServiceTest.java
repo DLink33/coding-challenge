@@ -3,10 +3,12 @@ package com.bluestaq.challenge.notesvault.notes;
 import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
+import java.time.Instant;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -58,5 +60,56 @@ public class NoteServiceTest {
             .hasMessage("content must not be blank");
         verify(noteRepository, never()).save(any());
     }
+
+    @Test
+    void getNoteById_withValidId_returnsNote() {
+        NoteEntity note = new NoteEntity();
+        note.setId("1");
+        note.setCreatedAt(Instant.parse("1991-10-27T00:00:00Z"));
+        note.setContent("hello");
+
+        when(noteRepository.findById("1")).thenReturn(java.util.Optional.of(note));
+
+        NoteEntity result = noteService.getNoteById("1");
+
+        assertThat(result.getId()).isEqualTo("1");
+        assertThat(result.getCreatedAt()).isEqualTo(Instant.parse("1991-10-27T00:00:00Z"));
+        assertThat(result.getContent()).isEqualTo("hello");
+
+        verify(noteRepository, times(1)).findById("1");
+    }
+
+    @Test
+    void getNoteById_withInvalidId_throwsNoteNotFoundException() {
+    String invalidId = "non-existent-id";
+    when(noteRepository.findById(invalidId)).thenReturn(java.util.Optional.empty());
+
+    assertThatThrownBy(() -> noteService.getNoteById(invalidId))
+        .isInstanceOf(com.bluestaq.challenge.notesvault.except.NoteNotFoundException.class)
+        .hasMessageContaining(invalidId);
+
+    verify(noteRepository, times(1)).findById(invalidId);
+    }
+
+    @Test
+    void listNotes_returnsNewestFirst() {
+        NoteEntity older = new NoteEntity();
+        older.setId("1");
+        older.setCreatedAt(Instant.parse("1991-10-07T00:00:00Z"));
+        older.setContent("older");
+
+        NoteEntity newer = new NoteEntity();
+        newer.setId("2");
+        newer.setCreatedAt(Instant.parse("1991-10-27T00:00:10Z"));
+        newer.setContent("newer");
+
+        when(noteRepository.findAllByOrderByCreatedAtDesc())
+            .thenReturn(List.of(newer, older));
+
+        List<NoteEntity> notes = noteService.listNotes();
+
+        assertThat(notes).extracting(NoteEntity::getId).containsExactly("2", "1");
+        verify(noteRepository, times(1)).findAllByOrderByCreatedAtDesc();
+    }   
 
 }

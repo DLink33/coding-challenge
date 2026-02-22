@@ -467,7 +467,7 @@ This prevents business rules from leaking into the persistence layer.
 #### 4. Updated `NoteRepositoryTest`
 - Adjusted test to manually assign required fields (`id`, `createdAt`) before saving
 - Clarified that repository tests validate mapping behavior only
-- Removed reliance on entity-side creation logic
+- Removed reliance on entity-side creation logics
 
 ---
 
@@ -510,3 +510,97 @@ This test validates business logic independently from JPA or HTTP layers.
 - Implement `GET /notes/{id}`
 - Implement `GET /notes`
 - Decide on final error response shape for invalid requests
+
+---
+
+## Session 6 - Add Retrieval Endpoints & Finalize Error Handling
+
+### Objectives
+- Strengthen `NoteControllerTest` with persistence assertion
+- Implement `GET /notes/{id}`
+- Implement `GET /notes`
+- Finalize error response shape for invalid requests
+- Add service-level tests for retrieval logic
+
+---
+
+### Completed
+
+#### 1. Strengthened `NoteControllerTest` (Persistence Assertion)
+- Used `MvcResult` to capture POST response
+- Extracted generated `id` from JSON body
+- Queried `NoteRepository` directly to verify entity persisted
+- Asserted `content` and `createdAt` are stored correctly
+- Confirms end-to-end behavior: HTTP → Service → Repository → DB
+
+---
+
+#### 2. Implemented `GET /notes/{id}`
+- Added endpoint to `NoteController`
+- Delegated lookup to `NoteService.getNoteById`
+- Threw `NoteNotFoundException` when ID missing
+- Verified:
+  - `200 OK` when found
+  - `404 Not Found` when missing
+  - Consistent JSON error shape: `{ "error": "..." }`
+
+---
+
+#### 3. Implemented `GET /notes`
+- Added list endpoint to `NoteController`
+- Delegated to `NoteService.listNotes`
+- Repository uses `findAllByOrderByCreatedAtDesc`
+- Mapped entities → `NoteResponse`
+- Verified newest-first ordering via controller test
+
+---
+
+#### 4. Centralized Exception Handling
+- Moved `ApiExceptionHandler` into `except` package
+- Added handlers for:
+  - `MethodArgumentNotValidException` → 400
+  - `NoteNotFoundException` → 404
+  - `IllegalArgumentException` → 400
+- Standardized error contract: `{ "error": "message" }`
+
+---
+
+#### 5. Expanded `NoteServiceTest`
+- Stubbed repository methods correctly using Mockito
+- Added tests for:
+  - `getNoteById` success
+  - `getNoteById` throws when missing
+  - `listNotes` returns newest-first ordering
+- Clarified difference between mocked repository behavior and real persistence
+
+---
+
+### Observations
+- Mock-based service tests require explicit stubbing; mocks do not persist state.
+- Controller tests validate integration behavior across layers.
+- Ordering guarantees should be tested at the HTTP layer, not just service.
+- Centralized exception handling simplifies controller code.
+- Error message assertions should avoid brittle exact-string matching.
+
+---
+
+### Status
+- Project builds successfully
+- All service and controller tests pass
+- Endpoints implemented:
+  - `POST /notes`
+  - `GET /notes/{id}`
+  - `GET /notes`
+- Consistent error handling in place
+
+---
+
+### Next Steps
+- Implement `DELETE /notes/{id}`
+- Add delete controller tests (204 + 404 cases)
+- Final README polish (API examples + tradeoffs)
+- Test manuall with curl
+- Look into possible stretch goals:
+  - Docker containerization
+  - Simple front end for manual tests
+  - Note sorting

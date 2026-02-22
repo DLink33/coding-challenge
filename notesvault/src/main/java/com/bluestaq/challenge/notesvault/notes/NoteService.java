@@ -1,11 +1,17 @@
 package com.bluestaq.challenge.notesvault.notes;
 
 
+import java.util.List;
 import java.util.UUID;
 import java.time.Instant;
 
 import org.springframework.stereotype.Service;
 
+import com.bluestaq.challenge.notesvault.except.NoteNotFoundException;
+
+// This class is responsible for the business logic related to notes. 
+// It interacts with the NoteRepository to perform CRUD operations on notes.
+// and throws exceptions when certain conditions are not met (e.g., note not found, invalid content).
 @Service
 public class NoteService {
 
@@ -36,4 +42,14 @@ public class NoteService {
         return noteRepository.save(note);
 
     }
+
+    public NoteEntity getNoteById(String id) {
+        return noteRepository.findById(id)
+            .orElseThrow(() -> new NoteNotFoundException(id));
+    }
+
+    public List<NoteEntity> listNotes() {
+        return noteRepository.findAllByOrderByCreatedAtDesc();
+    }
+
 }

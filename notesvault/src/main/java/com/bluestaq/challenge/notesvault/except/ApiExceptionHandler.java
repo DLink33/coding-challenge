@@ -1,7 +1,8 @@
-package com.bluestaq.challenge.notesvault;
+package com.bluestaq.challenge.notesvault.except;
 
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -26,4 +27,20 @@ public class ApiExceptionHandler {
 
     return ResponseEntity.badRequest().body(Map.of("error", msg));
   }
+
+  // This method handles NoteNotFoundException, which is thrown when a note with a specified ID is not found.
+  // It returns a 404 Not Found response with a JSON body containing the error message.
+  @ExceptionHandler(NoteNotFoundException.class)
+  public ResponseEntity<Map<String, String>> handleNotFound(NoteNotFoundException ex) {
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(Map.of("error", ex.getMessage()));
+  }
+
+  // This method handles IllegalArgumentException, which can be thrown for various reasons (e.g., invalid input).
+  // It returns a 400 Bad Request response with a JSON body containing the error message.
+  @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+  }
+
 }

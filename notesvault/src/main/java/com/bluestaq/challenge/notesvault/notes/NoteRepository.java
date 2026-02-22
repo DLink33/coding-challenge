@@ -1,5 +1,7 @@
 package com.bluestaq.challenge.notesvault.notes;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 // This interface will make it easier to perform CRUD operations on NoteEntity objects in the database
@@ -15,4 +17,5 @@ public interface NoteRepository extends JpaRepository<NoteEntity, String> {
     - existsById(String id)
     - count()
   */
+  List<NoteEntity> findAllByOrderByCreatedAtDesc();
 }
