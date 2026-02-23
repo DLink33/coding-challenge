@@ -7,11 +7,12 @@ import java.time.Instant;
 
 import org.springframework.stereotype.Service;
 
+import com.bluestaq.challenge.notesvault.except.InvalidNoteContentException;
 import com.bluestaq.challenge.notesvault.except.NoteNotFoundException;
 
-// This class is responsible for the business logic related to notes. 
-// It interacts with the NoteRepository to perform CRUD operations on notes.
-// and throws exceptions when certain conditions are not met (e.g., note not found, invalid content).
+// This class is responsible for the business logic related to notes
+// Interacts with the NoteRepository to perform CRUD operations
+// Throws exceptions when certain conditions are not met (e.g. note not found, invalid content, etc.)
 @Service
 public class NoteService {
 
@@ -28,7 +29,7 @@ public class NoteService {
         // @NotBlank should catch this in the pipeline, but we will add this here
         // for Justin Case
         if (content.isEmpty()) {
-            throw new IllegalArgumentException("content must not be blank");
+            throw new InvalidNoteContentException("content must not be blank");
         }
 
         NoteEntity note = new NoteEntity(); // use the no-args constructor for JPA
@@ -57,6 +58,18 @@ public class NoteService {
             throw new NoteNotFoundException(id);
         }
         noteRepository.deleteById(id);
+    }
+
+    public NoteEntity updateNoteById(String id, String rawContent) {
+        String content = (rawContent == null) ? "" : rawContent.trim();
+
+        if (content.isEmpty()) {
+            throw new InvalidNoteContentException("content must not be blank");
+        }
+
+        NoteEntity noteToUpdate = this.getNoteById(id);
+        noteToUpdate.setContent(content);
+        return noteRepository.save(noteToUpdate);
     }
 
 }

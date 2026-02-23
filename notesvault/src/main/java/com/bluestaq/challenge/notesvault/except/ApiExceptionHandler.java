@@ -36,10 +36,10 @@ public class ApiExceptionHandler {
         .body(Map.of("error", ex.getMessage()));
   }
 
-  // This method handles IllegalArgumentException, which can be thrown for various reasons (e.g., invalid input).
+  // This method handles InvalidNoteContentException, which is thrown when the content of a note is invalid (e.g., blank).
   // It returns a 400 Bad Request response with a JSON body containing the error message.
-  @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+  @ExceptionHandler(InvalidNoteContentException.class)
+  public ResponseEntity<Map<String, String>> handleInvalidContent(InvalidNoteContentException ex) {
       return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
   }
 

@@ -16,19 +16,21 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.bluestaq.challenge.notesvault.except.NoteNotFoundException;
+import com.bluestaq.challenge.notesvault.except.InvalidNoteContentException;
 
 @ExtendWith(MockitoExtension.class)
 public class NoteServiceTest {
 
     @Mock
-    NoteRepository noteRepository;
+    private NoteRepository noteRepository;
 
     @InjectMocks
-    NoteService noteService;
+    private NoteService noteService;
 
     @Test
     void createNote_withValidContent_savesNoteToRepo() {
@@ -41,20 +43,14 @@ public class NoteServiceTest {
         assertThat(saved.getCreatedAt()).isNotNull();
         assertThat(saved.getContent()).isEqualTo("hello world");
 
-        ArgumentCaptor<NoteEntity> noteCaptor = ArgumentCaptor.forClass(NoteEntity.class);
-        verify(noteRepository).save(noteCaptor.capture());
+        verify(noteRepository).save(any(NoteEntity.class));
         verifyNoMoreInteractions(noteRepository);
-
-        NoteEntity capturedNote = noteCaptor.getValue();
-        assertThat(capturedNote.getId()).isNotBlank();
-        assertThat(capturedNote.getCreatedAt()).isNotNull();
-        assertThat(capturedNote.getContent()).isEqualTo("hello world");
     }
 
     @Test
-    void createNote_withBlankContent_throwsIllegalArgumentException() {
+    void createNote_withBlankContent_throwsInvalidNoteContentException() {
         assertThatThrownBy(() -> noteService.createNote("     "))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(InvalidNoteContentException.class)
             .hasMessage("content must not be blank");
 
         verify(noteRepository, never()).save(any());
@@ -62,9 +58,9 @@ public class NoteServiceTest {
     }
 
     @Test
-    void createNote_withNullContent_throwsIllegalArgumentException() {
+    void createNote_withNullContent_throwsInvalidNoteContentException() {
         assertThatThrownBy(() -> noteService.createNote(null))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(InvalidNoteContentException.class)
             .hasMessage("content must not be blank");
 
         verify(noteRepository, never()).save(any());
@@ -96,7 +92,7 @@ public class NoteServiceTest {
         when(noteRepository.findById(invalidId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> noteService.getNoteById(invalidId))
-            .isInstanceOf(com.bluestaq.challenge.notesvault.except.NoteNotFoundException.class)
+            .isInstanceOf(NoteNotFoundException.class)
             .hasMessageContaining(invalidId);
 
         verify(noteRepository).findById(invalidId);
@@ -144,11 +140,72 @@ public class NoteServiceTest {
         when(noteRepository.existsById(invalidId)).thenReturn(false);
 
         assertThatThrownBy(() -> noteService.deleteNoteById(invalidId))
-            .isInstanceOf(com.bluestaq.challenge.notesvault.except.NoteNotFoundException.class)
+            .isInstanceOf(NoteNotFoundException.class)
             .hasMessageContaining(invalidId);
 
         verify(noteRepository).existsById(invalidId);
         verify(noteRepository, never()).deleteById(anyString());
         verifyNoMoreInteractions(noteRepository);
     }
+
+    @Test
+    void updateNoteById_withValidIdAndContent_updatesAndReturnsNote() {
+        String id = UUID.randomUUID().toString();
+        Instant createdAt = Instant.now();
+        String rawContent = "  updated content  ";
+
+        NoteEntity existingNote = new NoteEntity();
+        existingNote.setId(id);
+        existingNote.setCreatedAt(createdAt);
+        existingNote.setContent("original content");
+
+        when(noteRepository.findById(id)).thenReturn(Optional.of(existingNote));
+        when(noteRepository.save(any(NoteEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        NoteEntity result = noteService.updateNoteById(id, rawContent);
+
+        // Verify that the returned note has the updated content and the same ID and createdAt
+        assertThat(result.getId()).isEqualTo(id);
+        // createdAt should not change on update
+        assertThat(result.getCreatedAt()).isEqualTo(createdAt);
+        // content should be updated and trimmed
+        assertThat(result.getContent()).isEqualTo("updated content");
+
+        // after we have asserted that the result is correct, we can also verify that the 
+        // repository methods were called as expected
+        verify(noteRepository).findById(id);
+        verify(noteRepository).save(existingNote);
+        verifyNoMoreInteractions(noteRepository);
+    }
+
+    @Test
+    void updateNoteById_withBlankContent_throwsInvalidNoteContentException() {
+        String id = UUID.randomUUID().toString();
+
+        assertThatThrownBy(() -> noteService.updateNoteById(id, "     "))
+            .isInstanceOf(com.bluestaq.challenge.notesvault.except.InvalidNoteContentException.class)
+            .hasMessage("content must not be blank");
+
+        // explicitly verify the repository was never called since the validation should fail 
+        // before any repository interaction
+        verify(noteRepository, never()).findById(anyString());
+        verify(noteRepository, never()).save(any());
+        // verify that there are no interactions with the repository at all
+        verifyNoMoreInteractions(noteRepository);
+    }
+
+    @Test
+    void updateNoteById_withInvalidId_throwsNoteNotFoundException() {
+        String id = "non-existent-id";
+        when(noteRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> noteService.updateNoteById(id, "valid content"))
+            .isInstanceOf(NoteNotFoundException.class)
+            .hasMessageContaining(id);
+
+        verify(noteRepository).findById(id);
+        verify(noteRepository, never()).save(any());
+        verifyNoMoreInteractions(noteRepository);
+    }
+
 }

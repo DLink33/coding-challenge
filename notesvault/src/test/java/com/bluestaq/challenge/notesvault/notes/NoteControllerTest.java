@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.Instant;
@@ -25,8 +26,11 @@ import java.time.Instant;
 @ActiveProfiles("test")
 class NoteControllerTest {
 
-  @Autowired MockMvc mockMvc;
-  @Autowired NoteRepository noteRepository;
+  @Autowired
+  private MockMvc mockMvc;
+  
+  @Autowired
+  private NoteRepository noteRepository;
 
   @AfterEach
   void tearDown() {
@@ -42,7 +46,7 @@ class NoteControllerTest {
 
   // rslt stores the response from the POST request to create a new note. 
   // We expect this to return a 201 Created status, and the response body should contain the note's id, content, and createdAt timestamp.
-  MvcResult rslt = mockMvc.perform(post("/notes")
+  MvcResult rslt = mockMvc.perform(post("/v1/notes")
       .contentType(MediaType.APPLICATION_JSON)
       .content(body))
     .andExpect(status().isCreated())
@@ -68,13 +72,13 @@ class NoteControllerTest {
       { "content": "hello world" }
     """;
 
-    mockMvc.perform(post("/notes")
+    mockMvc.perform(post("/v1/notes")
         .contentType(MediaType.APPLICATION_JSON)
         .content(json))
       // Verify 201 Created status  
       .andExpect(status().isCreated())
       // Verify Location header is present and matches the expected pattern
-      .andExpect(header().string("Location", Matchers.matchesPattern(".*/notes/.*")))
+      .andExpect(header().string("Location", Matchers.matchesPattern(".*/v1/notes/.*")))
       // Verify the body has an id
       .andExpect(jsonPath("$.id").isNotEmpty())
       // Verify the content is correct
@@ -85,11 +89,11 @@ class NoteControllerTest {
 
   @Test
   void createNote_blankContent_returns400() throws Exception {
-    // this will get trimmed to blank and should trigger the validation error
+    // should trigger validation failure due to @NotBlank on content field in CreateNoteRequest
     String json = """
       { "content": "   " }
     """; 
-    mockMvc.perform(post("/notes")
+    mockMvc.perform(post("/v1/notes")
         .contentType(MediaType.APPLICATION_JSON)
         .content(json))
       // Verify that the response status is 400 Bad Request due to validation failure
@@ -109,7 +113,7 @@ class NoteControllerTest {
     noteRepository.save(note);
 
     // Perform a GET request to retrieve the note by its ID
-    mockMvc.perform(get("/notes/{id}", "test-note-id"))
+    mockMvc.perform(get("/v1/notes/{id}", "test-note-id"))
       // Verify that the response status is 200 OK and the body contains the correct note details
       .andExpect(status().isOk())
       // Verify that the response body contains the expected id, content, and a non-empty createdAt timestamp
@@ -122,7 +126,7 @@ class NoteControllerTest {
 
   @Test
   void getNoteById_returns404_ifNotFound() throws Exception {
-    mockMvc.perform(get("/notes/{id}", "does-not-exist"))
+    mockMvc.perform(get("/v1/notes/{id}", "does-not-exist"))
       .andExpect(status().isNotFound())
       .andExpect(jsonPath("$.error").value(Matchers.containsString("does-not-exist")));
   }
@@ -141,7 +145,7 @@ class NoteControllerTest {
     newer.setCreatedAt(Instant.parse("2026-02-21T00:00:10Z"));
     noteRepository.save(newer);
 
-    mockMvc.perform(get("/notes"))
+    mockMvc.perform(get("/v1/notes"))
       .andExpect(status().isOk())
       // array size 2
       .andExpect(jsonPath("$", Matchers.hasSize(2)))
@@ -163,7 +167,7 @@ class NoteControllerTest {
     note.setCreatedAt(Instant.now());
     noteRepository.save(note);
 
-    mockMvc.perform(delete("/notes/{id}", "delete-me"))
+    mockMvc.perform(delete("/v1/notes/{id}", "delete-me"))
       // Verify that the response status is 204 No Content, indicating successful deletion
       .andExpect(status().isNoContent());
 
@@ -172,7 +176,58 @@ class NoteControllerTest {
 
   @Test
   void deleteNoteById_missing_returns404() throws Exception {
-    mockMvc.perform(delete("/notes/{id}", "does-not-exist"))
+    mockMvc.perform(delete("/v1/notes/{id}", "does-not-exist"))
+      .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void updateNoteById_returns200_andUpdatedNote() throws Exception {
+    NoteEntity note = new NoteEntity();
+    note.setId("update-me");
+    note.setContent("original content");
+    note.setCreatedAt(Instant.now());
+    noteRepository.save(note);
+
+    String json = """
+      { "content": "updated content" }
+    """;
+
+    mockMvc.perform(put("/v1/notes/{id}", "update-me")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(json))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.id").value("update-me"))
+      .andExpect(jsonPath("$.content").value("updated content"))
+      .andExpect(jsonPath("$.createdAt").isNotEmpty());
+  }
+
+  @Test
+  void updateNoteById_withBlankContent_returns400() throws Exception {
+    NoteEntity note = new NoteEntity();
+    note.setId("update-me");
+    note.setContent("original content");
+    note.setCreatedAt(Instant.now());
+    noteRepository.save(note);
+    
+    String json = """
+      { "content": "   " }
+    """;
+    mockMvc.perform(put("/v1/notes/{id}", "update-me")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(json))
+      .andExpect(status().isBadRequest())
+      .andExpect(jsonPath("$.error").value(Matchers.containsString("content")));
+
+  }
+
+  @Test 
+  void updateNoteById_withMissingId_returns404() throws Exception {
+    String json = """
+      { "content": "updated content" }
+    """;
+    mockMvc.perform(put("/v1/notes/{id}", "does-not-exist")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(json))
       .andExpect(status().isNotFound());
   }
 

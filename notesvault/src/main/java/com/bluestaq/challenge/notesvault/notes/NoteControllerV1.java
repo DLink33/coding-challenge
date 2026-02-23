@@ -9,18 +9,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.bluestaq.challenge.notesvault.except.NoteNotFoundException;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
+
 
 
 // This class is the REST controller for handling note-related HTTP requests.
 @RestController
-@RequestMapping("/notes")
-public class NoteController {
+@RequestMapping("/v1/notes")
+public class NoteControllerV1 {
   
   // this should be final since we are using constructor injection and it
   // should not change after construction
   private final NoteService noteService;
 
-  public NoteController(NoteService noteService) {
+  public NoteControllerV1(NoteService noteService) {
     this.noteService = noteService;
   }
 
@@ -38,7 +42,7 @@ public class NoteController {
     );
 
     return ResponseEntity
-        .created(URI.create("/notes/" + savedNote.getId()))
+        .created(URI.create("/v1/notes/" + savedNote.getId()))
         .body(body);
   }
 
@@ -66,6 +70,16 @@ public class NoteController {
         note.getContent()
       ))
       .toList();
+  }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<NoteResponse> updateNoteById(@PathVariable String id, @Valid @RequestBody UpdateNoteRequest req) {
+      NoteEntity updated = noteService.updateNoteById(id, req.content());
+      return ResponseEntity.ok(new NoteResponse(
+        updated.getId(),
+        updated.getCreatedAt(),
+        updated.getContent()
+      ));
   }
   
   @DeleteMapping("/{id}")

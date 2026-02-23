@@ -77,7 +77,9 @@ Business logic such as validation, trimming, ordering, and delete behavior resid
 
 ## API Endpoints
 
-### POST /notes
+**The current API version  is v1**
+
+### POST /v1/notes
 Create a new note.
 
 Request body:
@@ -88,7 +90,10 @@ Request body:
 }
 ```
 
-Response: `201 Created`
+Response: 
+```
+201 Created
+```
 
 ```json
 {
@@ -105,7 +110,7 @@ Behavior:
 
 ---
 
-### GET /notes
+### GET /v1/notes
 List all notes.
 
 Response: `200 OK`
@@ -124,11 +129,13 @@ Notes are returned in newest-first order.
 
 ---
 
-### GET /notes/{id}
+### GET /v1/notes/{id}
 Retrieve a single note by ID.
 
-Response: `200 OK`
-
+Response:
+```
+200 OK
+```
 If the note does not exist:
 
 ```
@@ -137,7 +144,7 @@ If the note does not exist:
 
 ---
 
-### DELETE /notes/{id}
+### DELETE /v1/notes/{id}
 Delete a note by ID.
 
 Response if successful:
@@ -156,29 +163,46 @@ Deletion logic is handled in the Service layer. A missing note results in a `Not
 
 ---
 
-## Testing
+### PUT /v1/notes/{id}
+Update a note by ID.
 
-The project includes:
+Request body:
 
-- API-level tests using MockMvc
-- Service-layer unit tests using Mockito
+{
+  "content": "Updated note content"
+}
 
-Service tests validate:
-- Content validation rules
-- Trimming behavior
-- Retrieval behavior
-- Ordering logic
-- Delete behavior (including exception handling)
+Response if successful:
 
-Tests are designed to be fast, focused, and deterministic.
+```
+200 OK
+```
+
+{
+  "id": "existing-uuid",
+  "content": "Updated note content",
+  "createdAt": "2026-02-22T23:41:12Z"
+}
+
+If the note does not exist:
+
+```
+404 Not Found
+```
+
+If the content is null or blank:
+
+```
+400 Bad Request
+```
 
 ---
 
 ## Assumptions & Tradeoffs
 
-- Notes are immutable after creation (no update endpoint implemented).
 - Authentication and authorization are out of scope.
 - Pagination is not required for the MVP.
+- Uses SQLite versus something like Postgresql
 - Error responses are intentionally simple and do not use a custom error wrapper object.
 
 The emphasis of this implementation is on clarity, layering, and predictable API behavior rather than feature breadth.
@@ -193,5 +217,3 @@ The project runs locally with a single command using the Maven Wrapper:
 cd notesvault
 ./mvnw spring-boot:run
 ```
-
-No external services are required.
