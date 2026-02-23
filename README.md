@@ -195,6 +195,21 @@ If the content is null or blank:
 ```
 400 Bad Request
 ```
+## Testing
+
+The project includes:
+
+- API-level tests using MockMvc
+- Service-layer unit tests using Mockito
+
+Service tests validate:
+- Content validation rules
+- Trimming behavior
+- Retrieval behavior
+- Ordering logic
+- Delete behavior (including exception handling)
+
+Tests are designed to be fast, focused, and deterministic.
 
 ---
 
@@ -203,6 +218,9 @@ If the content is null or blank:
 - Authentication and authorization are out of scope.
 - Pagination is not required for the MVP.
 - Uses SQLite versus something like Postgresql
+- Notes are immutable after creation (no update endpoint implemented).
+- Authentication and authorization are out of scope.
+- Pagination is not required for the MVP.
 - Error responses are intentionally simple and do not use a custom error wrapper object.
 
 The emphasis of this implementation is on clarity, layering, and predictable API behavior rather than feature breadth.
