@@ -15,6 +15,7 @@ import com.jayway.jsonpath.JsonPath;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.Instant;
@@ -147,4 +148,17 @@ class NoteControllerTest {
       .andExpect(jsonPath("$[1].content").value("older"));
   }
 
+  @Test
+  void deleteNoteById_returns204_andDeletes() throws Exception {
+    NoteEntity note = new NoteEntity();
+    note.setId("delete-me");
+    note.setContent("to be deleted");
+    note.setCreatedAt(Instant.now());
+    noteRepository.save(note);
+
+    mockMvc.perform(delete("/notes/{id}", "delete-me"))
+      .andExpect(status().isNoContent());
+
+    assertThat(noteRepository.findById("delete-me")).isEmpty();
+  }
 }

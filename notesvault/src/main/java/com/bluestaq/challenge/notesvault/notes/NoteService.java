@@ -52,4 +52,9 @@ public class NoteService {
         return noteRepository.findAllByOrderByCreatedAtDesc();
     }
 
+    public void deleteNoteById(String id) {
+        NoteEntity note = getNoteById(id);
+        noteRepository.delete(note);
+    }
+
 }

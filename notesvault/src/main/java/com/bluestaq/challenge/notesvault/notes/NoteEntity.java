@@ -27,11 +27,11 @@ public class NoteEntity {
   @Column(name = "content", nullable = false, columnDefinition = "TEXT")
   private String content;
 
-  public NoteEntity() {
+  protected NoteEntity() {
     // Default constructor for JPA
     // this is used by JPA to create instances of the entity 
-    // when retrieving data from the database. Notice it's no-args
-    // and protected access level
+    // when retrieving data from the database. 
+    // No-argument constructors are required by JPA specifications.
   }
 
   //getters

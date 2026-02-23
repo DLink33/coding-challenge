@@ -66,7 +66,10 @@ public class NoteController {
       .toList();
   }
 
-  //TODO: add update and delete endpoints
-  
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deleteById(@PathVariable String id) {
+    noteService.deleteNoteById(id);
+    return ResponseEntity.noContent().build();
+  }
 
 }
