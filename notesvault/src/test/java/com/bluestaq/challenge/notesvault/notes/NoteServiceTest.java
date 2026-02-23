@@ -4,11 +4,14 @@ import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.times;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -27,7 +30,7 @@ public class NoteServiceTest {
     NoteService noteService;
 
     @Test
-    void crateNote_withValidContent_andSavesNoteToRepo() {
+    void crateNote_withValidContent_savesNoteToRepo() {
         when(noteRepository.save(any(NoteEntity.class)))
             .thenAnswer(inv -> inv.getArgument(0, NoteEntity.class));
 
@@ -76,7 +79,7 @@ public class NoteServiceTest {
         assertThat(result.getCreatedAt()).isEqualTo(Instant.parse("1991-10-27T00:00:00Z"));
         assertThat(result.getContent()).isEqualTo("hello");
 
-        verify(noteRepository, times(1)).findById("1");
+        verify(noteRepository).findById("1");
     }
 
     @Test
@@ -88,7 +91,7 @@ public class NoteServiceTest {
         .isInstanceOf(com.bluestaq.challenge.notesvault.except.NoteNotFoundException.class)
         .hasMessageContaining(invalidId);
 
-    verify(noteRepository, times(1)).findById(invalidId);
+    verify(noteRepository).findById(invalidId);
     }
 
     @Test
@@ -109,7 +112,31 @@ public class NoteServiceTest {
         List<NoteEntity> notes = noteService.listNotes();
 
         assertThat(notes).extracting(NoteEntity::getId).containsExactly("2", "1");
-        verify(noteRepository, times(1)).findAllByOrderByCreatedAtDesc();
-    }   
+        verify(noteRepository).findAllByOrderByCreatedAtDesc();
+    }
 
+    @Test 
+    void deleteNoteById_withValidId_deletesNote() {
+        String idToDelete = UUID.randomUUID().toString();
+        when(noteRepository.existsById(idToDelete)).thenReturn(true);
+        noteService.deleteNoteById(idToDelete);
+        verify(noteRepository).existsById(idToDelete);
+        verify(noteRepository).deleteById(idToDelete);
+        verifyNoMoreInteractions(noteRepository);
+    }
+
+    @Test
+    void deleteNoteById_withInvalidId_throwsNoteNotFoundException() {
+        String invalidId = "non-existent-id";
+        when(noteRepository.existsById(invalidId)).thenReturn(false);
+
+        assertThatThrownBy(() -> noteService.deleteNoteById(invalidId))
+            .isInstanceOf(com.bluestaq.challenge.notesvault.except.NoteNotFoundException.class)
+            .hasMessageContaining(invalidId);
+
+        verify(noteRepository).existsById(invalidId);
+        verify(noteRepository, never()).deleteById(anyString());
+        verifyNoMoreInteractions(noteRepository);
+    }
 }
+

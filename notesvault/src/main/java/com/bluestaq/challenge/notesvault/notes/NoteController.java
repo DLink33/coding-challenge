@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.bluestaq.challenge.notesvault.except.NoteNotFoundException;
+
 
 // This class is the REST controller for handling note-related HTTP requests.
 @RestController
@@ -65,11 +67,17 @@ public class NoteController {
       ))
       .toList();
   }
-
+  
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteById(@PathVariable String id) {
-    noteService.deleteNoteById(id);
-    return ResponseEntity.noContent().build();
+    try {
+      noteService.deleteNoteById(id); // service decides if it exists
+      return ResponseEntity.noContent().build();
+    } catch (NoteNotFoundException e) {
+      return ResponseEntity.notFound().build();
+    }
   }
 
 }
+
+

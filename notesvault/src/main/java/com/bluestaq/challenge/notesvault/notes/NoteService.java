@@ -53,8 +53,10 @@ public class NoteService {
     }
 
     public void deleteNoteById(String id) {
-        NoteEntity note = getNoteById(id);
-        noteRepository.delete(note);
+        if (!noteRepository.existsById(id)) {
+            throw new NoteNotFoundException(id);
+        }
+        noteRepository.deleteById(id);
     }
 
 }
