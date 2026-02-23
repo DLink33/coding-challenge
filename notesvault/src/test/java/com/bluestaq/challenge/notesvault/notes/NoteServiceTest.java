@@ -1,6 +1,5 @@
 package com.bluestaq.challenge.notesvault.notes;
 
-import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -8,17 +7,19 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
+
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(MockitoExtension.class)
 public class NoteServiceTest {
@@ -30,7 +31,7 @@ public class NoteServiceTest {
     NoteService noteService;
 
     @Test
-    void crateNote_withValidContent_savesNoteToRepo() {
+    void createNote_withValidContent_savesNoteToRepo() {
         when(noteRepository.save(any(NoteEntity.class)))
             .thenAnswer(inv -> inv.getArgument(0, NoteEntity.class));
 
@@ -41,7 +42,9 @@ public class NoteServiceTest {
         assertThat(saved.getContent()).isEqualTo("hello world");
 
         ArgumentCaptor<NoteEntity> noteCaptor = ArgumentCaptor.forClass(NoteEntity.class);
-        verify(noteRepository,times(1)).save(noteCaptor.capture());
+        verify(noteRepository).save(noteCaptor.capture());
+        verifyNoMoreInteractions(noteRepository);
+
         NoteEntity capturedNote = noteCaptor.getValue();
         assertThat(capturedNote.getId()).isNotBlank();
         assertThat(capturedNote.getCreatedAt()).isNotNull();
@@ -53,7 +56,9 @@ public class NoteServiceTest {
         assertThatThrownBy(() -> noteService.createNote("     "))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("content must not be blank");
+
         verify(noteRepository, never()).save(any());
+        verifyNoMoreInteractions(noteRepository);
     }
 
     @Test
@@ -61,7 +66,9 @@ public class NoteServiceTest {
         assertThatThrownBy(() -> noteService.createNote(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("content must not be blank");
+
         verify(noteRepository, never()).save(any());
+        verifyNoMoreInteractions(noteRepository);
     }
 
     @Test
@@ -71,7 +78,7 @@ public class NoteServiceTest {
         note.setCreatedAt(Instant.parse("1991-10-27T00:00:00Z"));
         note.setContent("hello");
 
-        when(noteRepository.findById("1")).thenReturn(java.util.Optional.of(note));
+        when(noteRepository.findById("1")).thenReturn(Optional.of(note));
 
         NoteEntity result = noteService.getNoteById("1");
 
@@ -80,18 +87,20 @@ public class NoteServiceTest {
         assertThat(result.getContent()).isEqualTo("hello");
 
         verify(noteRepository).findById("1");
+        verifyNoMoreInteractions(noteRepository);
     }
 
     @Test
     void getNoteById_withInvalidId_throwsNoteNotFoundException() {
-    String invalidId = "non-existent-id";
-    when(noteRepository.findById(invalidId)).thenReturn(java.util.Optional.empty());
+        String invalidId = "non-existent-id";
+        when(noteRepository.findById(invalidId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> noteService.getNoteById(invalidId))
-        .isInstanceOf(com.bluestaq.challenge.notesvault.except.NoteNotFoundException.class)
-        .hasMessageContaining(invalidId);
+        assertThatThrownBy(() -> noteService.getNoteById(invalidId))
+            .isInstanceOf(com.bluestaq.challenge.notesvault.except.NoteNotFoundException.class)
+            .hasMessageContaining(invalidId);
 
-    verify(noteRepository).findById(invalidId);
+        verify(noteRepository).findById(invalidId);
+        verifyNoMoreInteractions(noteRepository);
     }
 
     @Test
@@ -112,14 +121,18 @@ public class NoteServiceTest {
         List<NoteEntity> notes = noteService.listNotes();
 
         assertThat(notes).extracting(NoteEntity::getId).containsExactly("2", "1");
+
         verify(noteRepository).findAllByOrderByCreatedAtDesc();
+        verifyNoMoreInteractions(noteRepository);
     }
 
-    @Test 
+    @Test
     void deleteNoteById_withValidId_deletesNote() {
         String idToDelete = UUID.randomUUID().toString();
         when(noteRepository.existsById(idToDelete)).thenReturn(true);
+
         noteService.deleteNoteById(idToDelete);
+
         verify(noteRepository).existsById(idToDelete);
         verify(noteRepository).deleteById(idToDelete);
         verifyNoMoreInteractions(noteRepository);
@@ -139,4 +152,3 @@ public class NoteServiceTest {
         verifyNoMoreInteractions(noteRepository);
     }
 }
-
