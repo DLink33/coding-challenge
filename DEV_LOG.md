@@ -604,3 +604,68 @@ This test validates business logic independently from JPA or HTTP layers.
   - Docker containerization
   - Simple front end for manual tests
   - Note sorting
+
+---
+
+## Session 7 - DELETE /notes/{id} Endpoint + Service Tests
+
+### Objectives
+- Implement `DELETE /notes/{id}`
+- Ensure correct HTTP status codes (`204` on success, `404` on missing note)
+- Move existence check + delete behavior into the service layer
+- Add unit tests for delete behavior in `NoteServiceTest`
+
+---
+
+### 1. Implemented `DELETE /notes/{id}` Endpoint
+- Added a `@DeleteMapping("/{id}")` handler in `NoteController`
+- Controller delegates deletion behavior to `NoteService` and returns:
+  - `204 No Content` when deletion succeeds
+  - `404 Not Found` when the note does not exist
+
+This keeps the controller focused on HTTP concerns and pushes business logic down into the service layer.
+
+---
+
+### 2. Service-Layer Delete Logic
+- Implemented a “delete-or-throw” approach in `NoteService.deleteNoteById(id)`
+  - Checks existence via `noteRepository.existsById(id)`
+  - If missing → throws `NoteNotFoundException`
+  - If present → calls `noteRepository.deleteById(id)`
+
+This approach avoids splitting the “check then delete” logic across layers and makes behavior easier to test.
+
+---
+
+### 3. Added Unit Tests for Deletion (`NoteServiceTest`)
+Added Mockito-based tests to validate delete behavior without needing the full Spring context:
+
+- **Valid ID deletes note**
+  - Mocks `existsById()` → `true`
+  - Verifies `deleteById(id)` is called exactly once
+  - Uses `verifyNoMoreInteractions()` to ensure no unexpected repository calls occur
+
+- **Invalid ID throws**
+  - Mocks `existsById()` → `false`
+  - Asserts `NoteNotFoundException` is thrown and message contains the missing ID
+  - Verifies `deleteById()` is never invoked
+
+This satisfies the “business-logic/data-layer test” requirement with tight, fast-running unit tests.
+
+---
+
+### Observations / Notes
+- Returning `204 No Content` is a clean REST behavior for delete (no response body required).
+- Pushing the existence check into the service improves separation of concerns and reduces the risk of inconsistent behavior between controller paths.
+- The service tests are intentionally strict (`verifyNoMoreInteractions`) to catch unintended repository calls during refactors.
+
+---
+
+### Status
+All required endpoints are now implemented and tested:
+- `POST /notes`
+- `GET /notes`
+- `GET /notes/{id}`
+- `DELETE /notes/{id}`
+
+Project is in a good state for final README polish and submission.
