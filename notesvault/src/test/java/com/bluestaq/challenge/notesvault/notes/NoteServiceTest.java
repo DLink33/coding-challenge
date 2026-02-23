@@ -110,6 +110,14 @@ public class NoteServiceTest {
 
         assertThat(notes).extracting(NoteEntity::getId).containsExactly("2", "1");
         verify(noteRepository, times(1)).findAllByOrderByCreatedAtDesc();
-    }   
+    }
 
+    @Test 
+    void deleteNoteById_withValidId_deletesNote() {
+        String idToDelete = "1";
+        when(noteRepository.existsById(idToDelete)).thenReturn(true);
+        noteService.deleteNoteById(idToDelete);
+        verify(noteRepository, times(1)).deleteById(idToDelete);
+    }
 }
+

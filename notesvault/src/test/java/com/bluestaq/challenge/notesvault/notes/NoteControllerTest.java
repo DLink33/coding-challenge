@@ -110,9 +110,13 @@ class NoteControllerTest {
 
     // Perform a GET request to retrieve the note by its ID
     mockMvc.perform(get("/notes/{id}", "test-note-id"))
+      // Verify that the response status is 200 OK and the body contains the correct note details
       .andExpect(status().isOk())
+      // Verify that the response body contains the expected id, content, and a non-empty createdAt timestamp
       .andExpect(jsonPath("$.id").value("test-note-id"))
+      // Verify that the content matches what we saved
       .andExpect(jsonPath("$.content").value("Test note for retrieval"))
+      // Verify that the createdAt field is present and not empty
       .andExpect(jsonPath("$.createdAt").isNotEmpty());
   }
 
@@ -143,8 +147,11 @@ class NoteControllerTest {
       .andExpect(jsonPath("$", Matchers.hasSize(2)))
       // newest first
       .andExpect(jsonPath("$[0].id").value("2"))
+      // content matches
       .andExpect(jsonPath("$[0].content").value("newer"))
+      // second note is older
       .andExpect(jsonPath("$[1].id").value("1"))
+      // content matches
       .andExpect(jsonPath("$[1].content").value("older"));
   }
 
@@ -157,8 +164,16 @@ class NoteControllerTest {
     noteRepository.save(note);
 
     mockMvc.perform(delete("/notes/{id}", "delete-me"))
+      // Verify that the response status is 204 No Content, indicating successful deletion
       .andExpect(status().isNoContent());
 
     assertThat(noteRepository.findById("delete-me")).isEmpty();
   }
+
+  @Test
+  void deleteNoteById_missing_returns404() throws Exception {
+    mockMvc.perform(delete("/notes/{id}", "does-not-exist"))
+      .andExpect(status().isNotFound());
+  }
+
 }
