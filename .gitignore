@@ -27,3 +27,4 @@ notesvault/data/*.db
 notesvault/data/*.db-journal
 notesvault/data/*.db-wal
 notesvault/data/*.db-shm
+bluestaq-notesvault.zip
