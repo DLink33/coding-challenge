@@ -666,6 +666,8 @@ All required endpoints are now implemented and tested:
 
 Project is in a good state for final README polish and submission.
 
+---
+
 ## Session 7.5 - Update Notes with PUT, Testing, and API Versioning
 ### 1. Added PUT verb support for updating notes
 ### 2. Added appropriate testing for PUT endpoint behavior and responses on the Service and Controller

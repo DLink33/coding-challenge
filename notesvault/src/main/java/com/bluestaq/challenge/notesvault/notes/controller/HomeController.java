@@ -1,4 +1,4 @@
-package com.bluestaq.challenge.notesvault;
+package com.bluestaq.challenge.notesvault.notes.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
