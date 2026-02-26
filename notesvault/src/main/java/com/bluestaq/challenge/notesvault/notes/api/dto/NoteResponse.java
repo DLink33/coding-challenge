@@ -1,4 +1,4 @@
-package com.bluestaq.challenge.notesvault.notes;
+package com.bluestaq.challenge.notesvault.notes.api.dto;
 
 import java.time.Instant;
 

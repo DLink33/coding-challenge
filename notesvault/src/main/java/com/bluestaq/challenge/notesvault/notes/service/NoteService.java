@@ -1,4 +1,4 @@
-package com.bluestaq.challenge.notesvault.notes;
+package com.bluestaq.challenge.notesvault.notes.service;
 
 
 import java.util.List;
@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.bluestaq.challenge.notesvault.except.InvalidNoteContentException;
 import com.bluestaq.challenge.notesvault.except.NoteNotFoundException;
+import com.bluestaq.challenge.notesvault.notes.entity.NoteEntity;
+import com.bluestaq.challenge.notesvault.notes.repo.NoteRepository;
 
 // This class is responsible for the business logic related to notes
 // Interacts with the NoteRepository to perform CRUD operations

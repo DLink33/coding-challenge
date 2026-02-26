@@ -21,6 +21,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bluestaq.challenge.notesvault.except.NoteNotFoundException;
+import com.bluestaq.challenge.notesvault.notes.entity.NoteEntity;
+import com.bluestaq.challenge.notesvault.notes.repo.NoteRepository;
+import com.bluestaq.challenge.notesvault.notes.service.NoteService;
 import com.bluestaq.challenge.notesvault.except.InvalidNoteContentException;
 
 @ExtendWith(MockitoExtension.class)

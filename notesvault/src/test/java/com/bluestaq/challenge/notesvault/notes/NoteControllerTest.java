@@ -10,6 +10,9 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import com.bluestaq.challenge.notesvault.notes.entity.NoteEntity;
+import com.bluestaq.challenge.notesvault.notes.repo.NoteRepository;
 import com.jayway.jsonpath.JsonPath;
 
 import static org.assertj.core.api.Assertions.assertThat;

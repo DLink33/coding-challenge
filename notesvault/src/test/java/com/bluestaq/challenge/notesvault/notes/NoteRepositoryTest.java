@@ -7,6 +7,9 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.bluestaq.challenge.notesvault.notes.entity.NoteEntity;
+import com.bluestaq.challenge.notesvault.notes.repo.NoteRepository;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;

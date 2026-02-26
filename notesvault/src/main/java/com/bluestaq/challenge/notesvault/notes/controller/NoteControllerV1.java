@@ -1,4 +1,4 @@
-package com.bluestaq.challenge.notesvault.notes;
+package com.bluestaq.challenge.notesvault.notes.controller;
 
 import java.net.URI;
 import java.util.List;
@@ -9,6 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.bluestaq.challenge.notesvault.except.NoteNotFoundException;
+import com.bluestaq.challenge.notesvault.notes.api.dto.CreateNoteRequest;
+import com.bluestaq.challenge.notesvault.notes.api.dto.NoteResponse;
+import com.bluestaq.challenge.notesvault.notes.api.dto.UpdateNoteRequest;
+import com.bluestaq.challenge.notesvault.notes.entity.NoteEntity;
+import com.bluestaq.challenge.notesvault.notes.service.NoteService;
+
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
